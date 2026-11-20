@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hostel Diet &amp; Snack Tracker</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen antialiased">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-all">
+    <span id="toastText">Saved</span>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+          <i data-lucide="utensils" class="h-5 w-5"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">Hostel Diet Tracker</h1>
+            <span id="syncBadge" class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">Local Storage</span>
+          </div>
+          <p class="truncate text-xs text-slate-500">Simple &amp; Special Diets • Snack ₹ Ledger</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="openRatesBtn" type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[0.98] transition">
+          <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5 text-slate-500"></i>
+          <span>Rates</span>
+        </button>
+        <button id="openExportBtn" type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 active:scale-[0.98] transition">
+          <i data-lucide="file-text" class="h-3.5 w-3.5"></i>
+          <span>Export .TXT</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-5 sm:px-6">
+    <!-- Monthly Summary KPI Strip -->
+    <section aria-label="Monthly Summary" class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Month Diets</span>
+          <span class="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700" id="kpiMonthLabel">Nov 2026</span>
+        </div>
+        <div class="mt-1.5 text-2xl font-bold tracking-tight text-slate-900" id="kpiTotalDiets">0</div>
+        <div class="mt-1 flex items-center gap-2 text-xs text-slate-500">
+          <span class="text-emerald-700 font-medium"><span id="kpiSimpleCount">0</span> Simple</span>
+          <span>•</span>
+          <span class="text-amber-700 font-medium"><span id="kpiSpecialCount">0</span> Special</span>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Diet Cost</span>
+          <i data-lucide="chef-hat" class="h-4 w-4 text-emerald-600"></i>
+        </div>
+        <div class="mt-1.5 text-2xl font-bold tracking-tight text-slate-900" id="kpiDietCost">₹0</div>
+        <div class="mt-1 text-xs text-slate-500" id="kpiRatesHint">₹45 Simple / ₹75 Special</div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-500">Snacks Added</span>
+          <i data-lucide="coffee" class="h-4 w-4 text-indigo-600"></i>
+        </div>
+        <div class="mt-1.5 text-2xl font-bold tracking-tight text-indigo-700" id="kpiSnacksCost">₹0</div>
+        <div class="mt-1 text-xs text-slate-500"><span id="kpiSnackEntries">0</span> snack entries</div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-900 bg-slate-900 p-3.5 text-white shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-medium text-slate-300">Month Grand Total</span>
+          <i data-lucide="indian-rupee" class="h-4 w-4 text-emerald-400"></i>
+        </div>
+        <div class="mt-1.5 text-2xl font-bold tracking-tight text-white" id="kpiGrandTotal">₹0</div>
+        <div class="mt-1 text-xs text-slate-300">Diets + Snacks combined</div>
+      </div>
+    </section>
+
+    <!-- Main Two-Column Grid -->
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+      <!-- Calendar Column -->
+      <section class="lg:col-span-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <select id="monthSelect" aria-label="Select Month" class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"></select>
+            <select id="yearSelect" aria-label="Select Year" class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"></select>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button id="prevMonthBtn" type="button" aria-label="Previous Month" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition">
+              <i data-lucide="chevron-left" class="h-4 w-4"></i>
+            </button>
+            <button id="todayBtn" type="button" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+              Today
+            </button>
+            <button id="nextMonthBtn" type="button" aria-label="Next Month" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition">
+              <i data-lucide="chevron-right" class="h-4 w-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1.5 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5"></div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-3 text-xs text-slate-500">
+          <div class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"></span><span>Simple Diet (S)</span></div>
+          <div class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-500"></span><span>Special Diet (Sp)</span></div>
+          <div class="flex items-center gap-1.5"><span class="inline-block h-2.5 w-2.5 rounded-full bg-indigo-500"></span><span>Snacks (₹)</span></div>
+        </div>
+      </section>
+
+      <!-- Selected Day Editor Column -->
+      <section class="lg:col-span-5 flex flex-col gap-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div class="mb-4 flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="selectedDateTitle" class="text-base font-bold text-slate-900 sm:text-lg">Friday, 20 Nov 2026</h2>
+                <span id="todayBadge" class="hidden rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Today</span>
+              </div>
+              <p class="mt-0.5 text-xs text-slate-500">Max 2 diets/day (Lunch &amp; Night) • Special available on Wednesdays</p>
+            </div>
+            <button id="clearDayBtn" type="button" class="rounded-lg px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 transition">
+              Clear Day
+            </button>
+          </div>
+
+          <!-- Live Inline Rate Editor -->
+          <div class="mb-3 grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5">
+            <label class="flex items-center justify-between gap-2 rounded-lg bg-white px-2.5 py-1.5 border border-slate-200">
+              <span class="text-[11px] font-semibold text-emerald-700">Simple ₹</span>
+              <input id="inlineSimpleRate" type="number" min="0" step="1" aria-label="Simple Diet Rate in Rupees" class="w-16 text-right text-xs font-bold text-slate-900 focus:outline-none" />
+            </label>
+            <label class="flex items-center justify-between gap-2 rounded-lg bg-white px-2.5 py-1.5 border border-slate-200">
+              <span class="text-[11px] font-semibold text-amber-700">Special ₹</span>
+              <input id="inlineSpecialRate" type="number" min="0" step="1" aria-label="Special Diet Rate in Rupees" class="w-16 text-right text-xs font-bold text-slate-900 focus:outline-none" />
+            </label>
+          </div>
+
+          <!-- Daily 2-Diet Selector: Lunch & Night -->
+          <div class="mb-4 space-y-2.5">
+            <div id="lunchCard" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 transition">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <i data-lucide="sun" class="h-4 w-4 text-amber-500"></i>
+                    <span class="text-sm font-semibold text-slate-900">Lunch Diet</span>
+                    <span id="lunchWedBadge" class="hidden rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">Wed Special</span>
+                  </div>
+                  <p class="mt-0.5 text-xs text-slate-600" id="lunchStatusText">Not taken • ₹0</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button id="lunchNoneBtn" type="button" class="rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition">Off</button>
+                  <button id="lunchSimpleBtn" type="button" class="rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition">Simple</button>
+                  <button id="lunchSpecialBtn" type="button" class="hidden rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition">Special</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="nightCard" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 transition">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <i data-lucide="moon" class="h-4 w-4 text-indigo-500"></i>
+                    <span class="text-sm font-semibold text-slate-900">Night Diet</span>
+                    <span id="nightWedBadge" class="hidden rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">Wed Special</span>
+                  </div>
+                  <p class="mt-0.5 text-xs text-slate-600" id="nightStatusText">Not taken • ₹0</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button id="nightNoneBtn" type="button" class="rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition">Off</button>
+                  <button id="nightSimpleBtn" type="button" class="rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition">Simple</button>
+                  <button id="nightSpecialBtn" type="button" class="hidden rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition">Special</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between rounded-xl bg-emerald-50/70 border border-emerald-100 px-3.5 py-2 text-xs">
+              <span class="font-medium text-emerald-900">Day Diets (<span id="dayDietCountSummary">0 / 2</span>)</span>
+              <span class="font-bold text-emerald-800" id="dayDietsSubtotal">₹0</span>
+            </div>
+          </div>
+
+          <!-- Snacks / Rupees Adder -->
+          <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3.5">
+            <div class="mb-2.5 flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-indigo-600"></span>
+                <span class="text-sm font-semibold text-slate-900">Snacks / Extra Rupees (₹)</span>
+              </div>
+              <span class="text-sm font-bold text-indigo-700" id="daySnacksTotal">₹0</span>
+            </div>
+
+            <div class="mb-2.5 flex flex-wrap gap-1.5">
+              <button type="button" data-quick-snack="10" class="quick-snack-btn rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 active:scale-95 transition">+₹10</button>
+              <button type="button" data-quick-snack="20" class="quick-snack-btn rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 active:scale-95 transition">+₹20</button>
+              <button type="button" data-quick-snack="30" class="quick-snack-btn rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 active:scale-95 transition">+₹30</button>
+              <button type="button" data-quick-snack="50" class="quick-snack-btn rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 active:scale-95 transition">+₹50</button>
+              <button type="button" data-quick-snack="100" class="quick-snack-btn rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 active:scale-95 transition">+₹100</button>
+            </div>
+
+            <form id="snackForm" class="flex flex-col gap-2 sm:flex-row">
+              <div class="relative w-full sm:w-28 shrink-0">
+                <span class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">₹</span>
+                <input id="snackAmountInput" type="number" min="1" step="1" placeholder="Amount" required class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-6 pr-2 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <input id="snackNoteInput" type="text" maxlength="40" placeholder="Item (e.g. Chai, Maggi)" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none" />
+              <button type="submit" class="shrink-0 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:scale-95 transition">
+                Add
+              </button>
+            </form>
+
+            <div id="daySnackList" class="mt-3 space-y-1.5 max-h-40 overflow-y-auto"></div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-white">
+            <span class="text-xs font-medium text-slate-300">Total for Selected Day</span>
+            <span id="dayGrandTotal" class="text-lg font-bold text-white">₹0</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Export .TXT Modal -->
+  <div id="exportModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Export Expenses (.TXT)</h3>
+          <p class="text-xs text-slate-500">Generate a plain-text diet &amp; snack report for a month or custom date range</p>
+        </div>
+        <button id="closeExportBtn" type="button" aria-label="Close Export Modal" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4">
+        <div class="flex rounded-xl bg-slate-100 p-1">
+          <button id="modeMonthBtn" type="button" class="flex-1 rounded-lg bg-white py-2 text-xs font-semibold text-slate-900 shadow-sm transition">By Month</button>
+          <button id="modeRangeBtn" type="button" class="flex-1 rounded-lg py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition">Specific Time Period</button>
+        </div>
+
+        <div id="exportMonthControls" class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="exportMonthSelect" class="block text-xs font-medium text-slate-600 mb-1">Month</label>
+            <select id="exportMonthSelect" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:border-slate-900 focus:outline-none"></select>
+          </div>
+          <div>
+            <label for="exportYearSelect" class="block text-xs font-medium text-slate-600 mb-1">Year</label>
+            <select id="exportYearSelect" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:border-slate-900 focus:outline-none"></select>
+          </div>
+        </div>
+
+        <div id="exportRangeControls" class="hidden grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label for="exportStartDate" class="block text-xs font-medium text-slate-600 mb-1">From Date</label>
+            <input id="exportStartDate" type="date" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:border-slate-900 focus:outline-none" />
+          </div>
+          <div>
+            <label for="exportEndDate" class="block text-xs font-medium text-slate-600 mb-1">To Date</label>
+            <input id="exportEndDate" type="date" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:border-slate-900 focus:outline-none" />
+          </div>
+        </div>
+
+        <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+          <input id="includeEmptyDaysCheckbox" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+          <span>Include days with zero diets and zero snacks</span>
+        </label>
+
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">.TXT Preview</span>
+            <span id="exportLineCount" class="text-xs text-slate-400"></span>
+          </div>
+          <textarea id="txtPreview" readonly rows="11" class="w-full rounded-xl border border-slate-200 bg-slate-950 p-3.5 font-mono text-xs leading-relaxed text-emerald-300 focus:outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-5 py-3.5">
+        <button id="copyTxtBtn" type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition">
+          <i data-lucide="copy" class="h-3.5 w-3.5"></i><span>Copy Text</span>
+        </button>
+        <button id="downloadTxtBtn" type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition">
+          <i data-lucide="download" class="h-3.5 w-3.5"></i><span>Download .TXT</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rates & Settings Modal -->
+  <div id="ratesModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <h3 class="text-base font-bold text-slate-900">Diet Rates &amp; Data</h3>
+        <button id="closeRatesBtn" type="button" aria-label="Close Rates Modal" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+      <form id="ratesForm" class="p-5 space-y-4">
+        <div>
+          <label for="simpleRateInput" class="block text-xs font-semibold text-slate-700 mb-1">Simple Diet Rate (₹)</label>
+          <input id="simpleRateInput" type="number" min="0" step="1" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none" />
+        </div>
+        <div>
+          <label for="specialRateInput" class="block text-xs font-semibold text-slate-700 mb-1">Special Diet Rate (₹)</label>
+          <input id="specialRateInput" type="number" min="0" step="1" required class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-900 focus:border-amber-500 focus:outline-none" />
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+          <button id="resetAllBtn" type="button" class="text-xs font-semibold text-rose-600 hover:underline">Clear All Saved Data</button>
+          <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition">Save Rates</button>
+        </div>
+
+        <div id="resetConfirmBox" class="hidden rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+          <p class="font-semibold mb-2">Delete all logged diets and snacks?</p>
+          <div class="flex gap-2">
+            <button id="confirmResetBtn" type="button" class="rounded-lg bg-rose-600 px-3 py-1.5 font-semibold text-white hover:bg-rose-700">Yes, Delete All</button>
+            <button id="cancelResetBtn" type="button" class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-rose-700 hover:bg-rose-100">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
